@@ -1,6 +1,7 @@
 import os
 import librosa
 import numpy as np
+import audioread
 import requests
 import json
 from flask import Flask, request, render_template, jsonify, send_from_directory, redirect, url_for
@@ -14,6 +15,7 @@ AUDD_API_KEY = "23f8be055a73d048a6e630068adf2785"
 def favicon():
     return redirect(url_for('static', filename='nigga.png'))
 
+
 def recognize_song(file_path):
     """
     Recognize a song using the AudD API
@@ -24,9 +26,7 @@ def recognize_song(file_path):
                 'api_token': AUDD_API_KEY,
                 'return': 'spotify,apple_music,deezer,lyrics',
             }
-            files = {
-                'file': file,
-            }
+            files = {'file': file}
             
             response = requests.post('https://api.audd.io/', data=data, files=files)
             result = response.json()
@@ -37,52 +37,37 @@ def recognize_song(file_path):
                     'song_info': result['result']
                 }
             else:
-                return {
-                    'success': False,
-                    'error': "Song not recognized"
-                }
+                return {'success': False, 'error': "Song not recognized"}
     except Exception as e:
-        return {
-            'success': False,
-            'error': str(e)
-        }
+        return {'success': False, 'error': str(e)}
+
 
 def analyze_audio(file_path):
     """
-    Analyze audio file to extract basic features
+    Analyze audio file to extract basic features using audioread and minimal features
     """
     try:
-        # Load audio file
-        y, sr = librosa.load(file_path)
-        
-        # Extract features
-        duration = librosa.get_duration(y=y, sr=sr)
-        tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
-        
-        # Extract chroma features for key detection
-        chroma = librosa.feature.chroma_cqt(y=y, sr=sr)
-        chroma_mean = np.mean(chroma, axis=1)
-        notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-        key = notes[np.argmax(chroma_mean)]
-        
-        return {
-            'success': True,
-            'audio_features': {
-                'duration': round(duration, 2),
-                'tempo': round(tempo, 2),
-                'estimated_key': key
+        # Open audio file using audioread (more lightweight than librosa)
+        with audioread.audio_open(file_path) as audio_file:
+            duration = audio_file.duration  # Get duration directly
+            
+            # Return a simple tempo estimate (this is an optional feature)
+            # For now, we'll not extract more features to keep it light
+            return {
+                'success': True,
+                'audio_features': {
+                    'duration': round(duration, 2),
+                }
             }
-        }
     except Exception as e:
-        return {
-            'success': False,
-            'error': str(e)
-        }
+        return {'success': False, 'error': str(e)}
+
 
 @app.route('/')
 def index():
     """Render the main page"""
     return render_template('index.html')
+
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -142,7 +127,6 @@ def upload_file():
     
     return jsonify(result)
 
+
 if __name__ == '__main__':
-    
-    
     app.run(debug=True)
