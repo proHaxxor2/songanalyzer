@@ -1,0 +1,677 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MF - Music Finder & Analyzer</title>
+    <link rel="icon" href="{{ url_for('static', filename='nigga.png') }}" type="image/png">
+    <!-- Inside <head> -->
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(45deg, #1a1a2e, #16213e);
+            color: #fff;
+            min-height: 100vh;
+            cursor: none;
+            animation: pageLoad 0.8s ease-in-out forwards;
+        }
+        
+        h1 {
+            color: #fff;
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            animation: glow 3s infinite alternate;
+        }
+        
+        @keyframes glow {
+            0% { text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
+            100% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.9), 0 0 30px rgba(66, 220, 255, 0.7); }
+        }
+        
+        .upload-container {
+            border: 2px dashed #4facfe;
+            padding: 30px;
+            text-align: center;
+            margin: 30px 0;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 25px rgba(79, 172, 254, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .upload-container:hover {
+            border-color: #7fc8ff;
+            box-shadow: 0 0 35px rgba(79, 172, 254, 0.5);
+            transform: translateY(-5px);
+        }
+                .custom-file-input {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+#custom-file-button {
+    background: linear-gradient(to right, #4facfe, #00f2fe);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    font-size: 1rem;
+    border-radius: 30px;
+    cursor: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+    margin-right: 10px;
+}
+
+#custom-file-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px rgba(79, 172, 254, 0.6);
+    background: linear-gradient(to right, #00f2fe, #4facfe);
+}
+
+#file-name {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    padding: 8px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+}
+        
+        #file-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 400px;
+            color: white;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            font-size: 1.1rem;
+            border-radius: 30px;
+            cursor: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(79, 172, 254, 0.6);
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+        }
+        
+        #result {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 25px rgba(79, 172, 254, 0.2);
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .loading p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            animation: pulse 1.5s infinite;
+        }
+                
+        @keyframes pageLoad {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #4facfe;
+            margin: 0 auto;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        th {
+            background-color: rgba(79, 172, 254, 0.2);
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .streaming-links {
+            margin-top: 25px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .streaming-links a {
+            display: inline-block;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .streaming-links a:hover {
+            background: rgba(79, 172, 254, 0.5);
+            transform: translateY(-3px);
+        }
+        
+        pre {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+            border-left: 3px solid #4facfe;
+        }
+        
+        /* Custom cursor from the game code */
+       /* Custom cursor styles */
+html, body, button, a, input, label, select {
+    cursor: none !important;
+}
+
+html, body, button, a, input, label, select {
+    cursor: none !important;
+}
+
+#custom-cursor {
+    position: fixed;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #4facfe;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 99999;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s, background-color 0.2s;
+    box-shadow: 0 0 10px rgba(79, 172, 254, 0.7);
+    left: -100px;
+    top: -100px;
+    will-change: transform;
+}
+
+#custom-cursor.hover {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(79, 172, 254, 0.2);
+}
+
+#custom-cursor.active {
+    transform: translate(-50%, -50%) scale(0.7);
+    background-color: rgba(79, 172, 254, 0.5);
+}
+
+        
+        .song-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(to right, rgba(79, 172, 254, 0.3), rgba(0, 242, 254, 0.1));
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .audio-features {
+            display: flex;
+            justify-content: space-around;
+            margin: 25px 0;
+        }
+        
+        .feature-box {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            min-width: 120px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(79, 172, 254, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-box:hover {
+            transform: translateY(-5px);
+            border-color: #4facfe;
+        }
+        
+        .feature-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4facfe;
+            margin: 10px 0;
+        }
+        
+        .feature-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .error-message {
+            background: rgba(255, 87, 87, 0.2);
+            border-left: 4px solid #ff5757;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .audio-features {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .feature-box {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="cursor"></div>
+    
+    <h1>MF - Song Analyzer & Finder</h1>
+    
+    
+    <div class="upload-container">
+        <h2>Upload an audio file to identify the song</h2>
+        <p>Supports MP3, WAV, M4A, and other common audio formats</p>
+       <form id="upload-form" enctype="multipart/form-data">
+    <div class="custom-file-input">
+        <input type="file" id="file-input" accept="audio/*" style="display: none;">
+        <button type="button" id="custom-file-button">Choose File</button>
+        <span id="file-name">No file chosen</span>
+</div>
+            <button type="submit">Identify Song</button>
+        </form>
+    </div>
+    
+    <div class="loading">
+        <p>Analyzing audio and identifying song...</p>
+        <div class="loader"></div>
+    </div>
+    
+    <div id="result"></div>
+    
+    <script>
+        // Custom cursor
+// Advanced custom cursor implementation
+(function() {
+    // Remove any existing cursor elements
+    const oldCursor = document.getElementById('custom-cursor');
+    if (oldCursor) {
+        oldCursor.remove();
+    }
+    
+    // Remove any custom cursor styles
+    const oldStyle = document.getElementById('custom-cursor-style');
+    if (oldStyle) {
+        oldStyle.remove();
+    }
+    
+    // Create new cursor element
+    const cursor = document.createElement('div');
+    cursor.id = 'custom-cursor';
+    document.body.appendChild(cursor);
+    
+    // Add styles for the cursor
+    const style = document.createElement('style');
+    style.id = 'custom-cursor-style';
+    style.textContent = `
+        #custom-cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(0, 0, 0, 0.5);
+            pointer-events: none; /* THIS IS CRITICAL - prevents cursor from interfering */
+            z-index: 9999;
+            transition: transform 0.2s ease;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+        }
+        
+        #custom-cursor.active {
+            transform: translate(-50%, -50%) scale(0.8);
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        
+        /* Hide default cursor everywhere */
+        html, body, * {
+            cursor: none !important;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Variables for smooth cursor movement
+    let mouseX = -100, mouseY = -100;
+    let cursorX = -100, cursorY = -100;
+    let speed = 0.15; // Smooth follow speed
+    
+    // Track actual mouse position
+    document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+    });
+    
+    // Cursor animation loop with smooth following
+    function updateCursorPosition() {
+        // Calculate smooth movement
+        cursorX += (mouseX - cursorX) * speed;
+        cursorY += (mouseY - cursorY) * speed;
+        
+        // Apply position with hardware acceleration
+        cursor.style.left = `${cursorX}px`;
+        cursor.style.top = `${cursorY}px`;
+        
+        // Continue animation loop
+        requestAnimationFrame(updateCursorPosition);
+    }
+    
+    // Start animation loop
+    updateCursorPosition();
+    
+    // Handle cursor click state
+    document.addEventListener('mousedown', () => {
+        cursor.classList.add('active');
+    });
+    
+    document.addEventListener('mouseup', () => {
+        cursor.classList.remove('active');
+    });
+    
+    // Handle cursor visibility when page loses/gains focus
+    document.addEventListener('mouseleave', () => {
+        cursor.style.display = 'none';
+    });
+    
+    document.addEventListener('mouseenter', () => {
+        cursor.style.display = 'block';
+    });
+    
+    // Create a dummy transparent element to track hover state
+    // This solves the issue of detecting hovers without affecting interactions
+    const hoverDetector = document.createElement('div');
+    hoverDetector.id = 'hover-detector';
+    hoverDetector.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 99999;
+    `;
+    document.body.appendChild(hoverDetector);
+    
+    // Function to check if element is interactive
+    function isInteractive(element) {
+        if (!element) return false;
+        
+        const tagName = element.tagName.toLowerCase();
+        const interactiveTags = ['a', 'button', 'input', 'select', 'textarea', 'label'];
+        
+        if (interactiveTags.includes(tagName)) return true;
+        
+        const role = element.getAttribute('role');
+        if (role && ['button', 'link', 'checkbox', 'radio', 'menuitem', 'tab'].includes(role)) return true;
+        
+        const classes = element.classList;
+        if (classes && (classes.contains('interactive') || classes.contains('upload-container'))) return true;
+        
+        return false;
+    }
+    
+    // Update hover state based on element under cursor
+    document.addEventListener('mousemove', (e) => {
+        const elementUnderCursor = document.elementFromPoint(e.clientX, e.clientY);
+        if (isInteractive(elementUnderCursor) || isInteractive(elementUnderCursor?.parentElement)) {
+            cursor.style.width = '30px';
+            cursor.style.height = '30px';
+            cursor.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
+        } else {
+            cursor.style.width = '20px';
+            cursor.style.height = '20px';
+            cursor.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
+        }
+    });
+})();
+                
+                document.getElementById('custom-file-button').addEventListener('click', function() {
+    document.getElementById('file-input').click();
+});
+
+document.getElementById('file-input').addEventListener('change', function() {
+    const fileName = this.files[0] ? this.files[0].name : 'No file chosen';
+    document.getElementById('file-name').textContent = fileName;
+});
+        
+        // Form handling
+        document.getElementById('upload-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('file-input');
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.querySelector('.loading');
+            
+            if (!fileInput.files[0]) {
+                alert('Please select an audio file first');
+                return;
+            }
+            
+            // Create FormData object
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            // Show loading indicator
+            loadingDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+            
+            // Send request to server
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingDiv.style.display = 'none';
+                resultDiv.style.display = 'block';
+                
+                if (data.success) {
+                    // Song was recognized
+                    const songDetails = data.song_details;
+                    const audioFeatures = data.audio_features;
+                    const streamingLinks = data.streaming_links;
+                    
+                    let resultHTML = `
+                        <div class="song-header">
+                            <div>
+                                <h2>${songDetails.title}</h2>
+                                <h3>by ${songDetails.artist}</h3>
+                            </div>
+                            <div>
+                                <p>Album: ${songDetails.album}</p>
+                                <p>Released: ${songDetails.release_date}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="audio-features">
+                            <div class="feature-box">
+                                <div class="feature-value">${audioFeatures.duration}s</div>
+                                <div class="feature-label">Duration</div>
+                            </div>
+                            <div class="feature-box">
+                                <div class="feature-value">${audioFeatures.tempo}</div>
+                                <div class="feature-label">BPM</div>
+                            </div>
+                            <div class="feature-box">
+                                <div class="feature-value">${audioFeatures.estimated_key}</div>
+                                <div class="feature-label">Key</div>
+                            </div>
+                        </div>
+                        
+                        <h3>Song Details</h3>
+                        <table>
+                            <tr>
+                                <th>Title</th>
+                                <td>${songDetails.title}</td>
+                            </tr>
+                            <tr>
+                                <th>Artist</th>
+                                <td>${songDetails.artist}</td>
+                            </tr>
+                            <tr>
+                                <th>Album</th>
+                                <td>${songDetails.album}</td>
+                            </tr>
+                            <tr>
+                                <th>Release Date</th>
+                                <td>${songDetails.release_date}</td>
+                            </tr>
+                            <tr>
+                                <th>Label</th>
+                                <td>${songDetails.label}</td>
+                            </tr>
+                        </table>
+                    `;
+                    
+                    // Add streaming links if available
+                    if (Object.keys(streamingLinks).length > 0) {
+                        resultHTML += `<h3>Listen On</h3><div class="streaming-links">`;
+                        
+                        if (streamingLinks.spotify) {
+                            resultHTML += `<a href="${streamingLinks.spotify}" target="_blank">Spotify</a>`;
+                        }
+                        
+                        if (streamingLinks.apple_music) {
+                            resultHTML += `<a href="${streamingLinks.apple_music}" target="_blank">Apple Music</a>`;
+                        }
+                        
+                        if (streamingLinks.deezer) {
+                            resultHTML += `<a href="${streamingLinks.deezer}" target="_blank">Deezer</a>`;
+                        }
+                        
+                        resultHTML += `</div>`;
+                    }
+                    
+                    // Add lyrics if available
+                    if (songDetails.lyrics) {
+                        resultHTML += `
+                            <h3>Lyrics</h3>
+                            <pre>${songDetails.lyrics}</pre>
+                        `;
+                    }
+                    
+                    resultDiv.innerHTML = resultHTML;
+                } else {
+                    // Song was not recognized
+                    let errorHTML = `
+                        <div class="error-message">
+                            <h3>Song Not Recognized</h3>
+                            <p>${data.error || 'Unable to identify the song. Please try with a different audio file or a longer sample.'}</p>
+                        </div>
+                    `;
+                    
+                    // Still show audio features if available
+                    if (data.audio_features && Object.keys(data.audio_features).length > 0) {
+                        errorHTML += `
+                            <h3>Audio Analysis</h3>
+                            <div class="audio-features">
+                                <div class="feature-box">
+                                    <div class="feature-value">${data.audio_features.duration}s</div>
+                                    <div class="feature-label">Duration</div>
+                                </div>
+                                <div class="feature-box">
+                                    <div class="feature-value">${data.audio_features.tempo}</div>
+                                    <div class="feature-label">BPM</div>
+                                </div>
+                                <div class="feature-box">
+                                    <div class="feature-value">${data.audio_features.estimated_key}</div>
+                                    <div class="feature-label">Key</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    resultDiv.innerHTML = errorHTML;
+                }
+            })
+            .catch(error => {
+                loadingDiv.style.display = 'none';
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
+                    <div class="error-message">
+                        <h3>Error</h3>
+                        <p>An error occurred while processing your request: ${error.message}</p>
+                    </div>
+                `;
+            });
+        });
+    </script>
+</body>
+</html>
