@@ -1,4 +1,4 @@
 flask
-librosa
+librosa==0.8.1
 numpy
 
